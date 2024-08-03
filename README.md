@@ -1,6 +1,6 @@
-# Fetch weights using Playwright ![workflow](https://github.com/jpolley/weight-what/actions/workflows/playwright.yml/badge.svg)
+# Weight, what?! ![workflow](https://github.com/jpolley/weight-what/actions/workflows/playwright.yml/badge.svg)
 
-This weighty project uses Typescript and Playwright to locate the fake gold bar: http://sdetchallenge.fetch.com/ 
+This project uses Typescript and Playwright to weigh gold bars and locate the fake: http://sdetchallenge.fetch.com/ 
 
 ## Dev Setup
 
