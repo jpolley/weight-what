@@ -138,9 +138,17 @@ export class WeighPage {
     return await dialogMessagePromise;
   }
 
-  async printSummary(alertMessage, fakebar) {
+  async numberOfWeighs() {
+    if (await this.getResult(1).isVisible()) {
+      return "After weighing three times,";
+    } else {
+      return "After weighing one time,";
+    }
+  }
+
+  async printSummary(alertMessage: string, fakebar: number) {
     console.log(alertMessage);
-    console.log(`The fake bar is: ${fakebar}`);
+    console.log(`${await this.numberOfWeighs()} the fake bar is: ${fakebar}`);
     console.log(`1. ${await this.getResult(0).innerText()}`);
     if (await this.getResult(1).isVisible()) {
       console.log(`2. ${await this.getResult(1).innerText()}`);
