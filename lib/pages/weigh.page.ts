@@ -1,4 +1,5 @@
 import { Page } from "@playwright/test";
+import { evalutateResult } from "lib/helpers";
 
 export class WeighPage {
   readonly leftBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#left_${i}`));
@@ -54,44 +55,17 @@ export class WeighPage {
       return 8;
     }
 
-    let barsToWeigh = await this.evalutateResult(result);
+    let barsToWeigh = await evalutateResult(result);
     await this.weighBars(barsToWeigh);
 
     result = await this.getResult(1).innerText();
 
-    barsToWeigh = await this.evalutateResult(result);
+    barsToWeigh = await evalutateResult(result);
     await this.weighBars(barsToWeigh);
 
     result = await this.getResult(2).innerText();
 
-    return await this.evalutateResult(result)[0][0];
-  }
-
-  evalutateResult(input: string): number[][] {
-    // Extract arrays and comparison operator
-    const match = input.match(/\[(.*?)\] (>|<) \[(.*?)\]/);
-    const leftArrayStr = match[1];
-    const operator = match[2];
-    const rightArrayStr = match[3];
-
-    // Convert string array to arrays of numbers
-    const leftArray = leftArrayStr.split(",").map(Number);
-    const rightArray = rightArrayStr.split(",").map(Number);
-
-    let lesserArray: number[];
-
-    if (operator === "<") {
-      lesserArray = leftArray;
-    } else {
-      lesserArray = rightArray;
-    }
-
-    // Split the lesser array into two sub-arrays to make it easier to weigh
-    const midIndex = Math.ceil(lesserArray.length / 2);
-    const firstHalf = lesserArray.slice(0, midIndex);
-    const secondHalf = lesserArray.slice(midIndex);
-
-    return [firstHalf, secondHalf];
+    return await evalutateResult(result)[0][0];
   }
 
   async weighBars(bars: number[][]) {
