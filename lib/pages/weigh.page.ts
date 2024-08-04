@@ -5,11 +5,10 @@ export class WeighPage {
   readonly leftBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#left_${i}`));
   readonly rightBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#right_${i}`));
   readonly bars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#coin_${i}`));
+  readonly results = Array.from({ length: 3 }, (_, i) => this.page.locator(`ol > li:nth-child(${i + 1})`));
 
   readonly weighBtn = this.page.getByRole("button", { name: "Weigh" });
   readonly resetBtn = this.page.getByRole("button", { name: "Reset" });
-
-  readonly results = Array.from({ length: 3 }, (_, i) => this.page.locator(`ol > li:nth-child(${i + 1})`));
 
   getLeftBar(index: number) {
     if (index < 0 || index >= this.leftBars.length) {
