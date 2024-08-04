@@ -1,32 +1,42 @@
 import { Page } from "@playwright/test";
 
 export class WeighPage {
-  readonly left0 = this.page.locator("#left_0");
-  readonly left1 = this.page.locator("#left_1");
-  readonly left2 = this.page.locator("#left_2");
-  readonly left3 = this.page.locator("#left_3");
-
-  readonly right0 = this.page.locator("#right_0");
-  readonly right1 = this.page.locator("#right_1");
-  readonly right2 = this.page.locator("#right_2");
-  readonly right3 = this.page.locator("#right_3");
+  readonly leftBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#left_${i}`));
+  readonly rightBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#right_${i}`));
+  readonly bars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#coin_${i}`));
 
   readonly weighBtn = this.page.getByRole("button", { name: "Weigh" });
   readonly resetBtn = this.page.getByRole("button", { name: "Reset" });
 
-  readonly bar0 = this.page.locator("#coin_0");
-  readonly bar1 = this.page.locator("#coin_1");
-  readonly bar2 = this.page.locator("#coin_2");
-  readonly bar3 = this.page.locator("#coin_3");
-  readonly bar4 = this.page.locator("#coin_4");
-  readonly bar5 = this.page.locator("#coin_5");
-  readonly bar6 = this.page.locator("#coin_6");
-  readonly bar7 = this.page.locator("#coin_7");
-  readonly bar8 = this.page.locator("#coin_8");
+  readonly results = Array.from({ length: 3 }, (_, i) => this.page.locator(`ol > li:nth-child(${i + 1})`));
 
-  readonly result1 = this.page.locator("ol > li:nth-child(1)");
-  readonly result2 = this.page.locator("ol > li:nth-child(2)");
-  readonly result3 = this.page.locator("ol > li:nth-child(3)");
+  getLeftBar(index: number) {
+    if (index < 0 || index >= this.leftBars.length) {
+      throw new Error(`Invalid left bar index: ${index}`);
+    }
+    return this.leftBars[index];
+  }
+
+  getRightBar(index: number) {
+    if (index < 0 || index >= this.rightBars.length) {
+      throw new Error(`Invalid right bar index: ${index}`);
+    }
+    return this.rightBars[index];
+  }
+
+  getBar(index: number) {
+    if (index < 0 || index >= this.bars.length) {
+      throw new Error(`Invalid bar index: ${index}`);
+    }
+    return this.bars[index];
+  }
+
+  getResult(index: number) {
+    if (index < 0 || index >= this.results.length) {
+      throw new Error(`Invalid result index: ${index}`);
+    }
+    return this.results[index];
+  }
 
   async goto() {
     await this.page.goto("/");
@@ -38,23 +48,23 @@ export class WeighPage {
       [4, 5, 6, 7],
     ]);
 
-    const result1 = await this.result1.innerText();
+    let result = await this.getResult(0).innerText();
 
-    if (result1.includes("=")) {
+    if (result.includes("=")) {
       return 8;
     }
 
-    let barsToWeigh = await this.evalutateResult(result1);
+    let barsToWeigh = await this.evalutateResult(result);
     await this.weighBars(barsToWeigh);
 
-    const result2 = await this.result2.innerText();
+    result = await this.getResult(1).innerText();
 
-    barsToWeigh = await this.evalutateResult(result2);
+    barsToWeigh = await this.evalutateResult(result);
     await this.weighBars(barsToWeigh);
 
-    const result3 = await this.result3.innerText();
+    result = await this.getResult(2).innerText();
 
-    return await this.evalutateResult(result3)[0][0];
+    return await this.evalutateResult(result)[0][0];
   }
 
   evalutateResult(input: string): number[][] {
@@ -96,13 +106,13 @@ export class WeighPage {
 
   async fillLeft(bars: number[]) {
     for (let i = 0; i < bars.length; i++) {
-      await this[`left${i}`].fill(`${bars[i]}`);
+      await this.leftBars[i].fill(`${bars[i]}`);
     }
   }
 
   async fillRight(bars: number[]) {
     for (let i = 0; i < bars.length; i++) {
-      await this[`right${i}`].fill(`${bars[i]}`);
+      await this.rightBars[i].fill(`${bars[i]}`);
     }
   }
 
@@ -123,7 +133,7 @@ export class WeighPage {
       });
     });
 
-    await this[`bar${number}`].click();
+    await this.getBar(number).click();
 
     return await dialogMessagePromise;
   }
@@ -131,10 +141,10 @@ export class WeighPage {
   async printSummary(alertMessage, fakebar) {
     console.log(alertMessage);
     console.log(`The fake bar is: ${fakebar}`);
-    console.log(`1. ${await this.result1.innerText()}`);
-    if (await this.result2.isVisible()) {
-      console.log(`2. ${await this.result2.innerText()}`);
-      console.log(`3. ${await this.result3.innerText()}`);
+    console.log(`1. ${await this.getResult(0).innerText()}`);
+    if (await this.getResult(1).isVisible()) {
+      console.log(`2. ${await this.getResult(1).innerText()}`);
+      console.log(`3. ${await this.getResult(2).innerText()}`);
     }
   }
 
