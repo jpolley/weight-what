@@ -1,5 +1,4 @@
 import { Page } from "@playwright/test";
-import { evalutateResult } from "lib/helpers";
 
 export class WeighPage {
   readonly leftBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#left_${i}`));
@@ -35,36 +34,11 @@ export class WeighPage {
     if (index < 0 || index >= this.results.length) {
       throw new Error(`Invalid result index: ${index}`);
     }
-    return this.results[index];
+    return this.results[index].innerText();
   }
 
   async goto() {
     await this.page.goto("/");
-  }
-
-  async locateFakeBar() {
-    await this.weighBars([
-      [0, 1, 2, 3],
-      [4, 5, 6, 7],
-    ]);
-
-    let result = await this.getResult(0).innerText();
-
-    if (result.includes("=")) {
-      return 8;
-    }
-
-    let barsToWeigh = await evalutateResult(result);
-    await this.weighBars(barsToWeigh);
-
-    result = await this.getResult(1).innerText();
-
-    barsToWeigh = await evalutateResult(result);
-    await this.weighBars(barsToWeigh);
-
-    result = await this.getResult(2).innerText();
-
-    return await evalutateResult(result)[0][0];
   }
 
   async weighBars(bars: number[][]) {
@@ -112,20 +86,24 @@ export class WeighPage {
   }
 
   async numberOfWeighs() {
-    if (await this.getResult(1).isVisible()) {
+    if (await this.hasMultipleWeighs()) {
       return "After weighing three times,";
     } else {
       return "After weighing one time,";
     }
   }
 
+  async hasMultipleWeighs() {
+    return await this.results[1].isVisible();
+  }
+
   async printSummary(alertMessage: string, fakebar: number) {
     console.log(alertMessage);
     console.log(`${await this.numberOfWeighs()} the fake bar is: ${fakebar}`);
-    console.log(`1. ${await this.getResult(0).innerText()}`);
-    if (await this.getResult(1).isVisible()) {
-      console.log(`2. ${await this.getResult(1).innerText()}`);
-      console.log(`3. ${await this.getResult(2).innerText()}`);
+    console.log(`1. ${await this.getResult(0)}`);
+    if (await this.hasMultipleWeighs()) {
+      console.log(`2. ${await this.getResult(1)}`);
+      console.log(`3. ${await this.getResult(2)}`);
     }
   }
 
