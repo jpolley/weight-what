@@ -1,6 +1,6 @@
 # Weight, what?! ![workflow](https://github.com/jpolley/weight-what/actions/workflows/playwright.yml/badge.svg)
 
-This project uses Typescript and Playwright to weigh gold bars and locate the fake one [here](http://sdetchallenge.fetch.com/).
+This project uses Typescript and Playwright to weigh gold bars and locate the fake one [here](https://sdetchallenge.fetch.com/).
 
 ## Dev Setup
 

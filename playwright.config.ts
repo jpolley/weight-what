@@ -18,7 +18,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? [["github"], ["list"], ["html"]] : [["list"], ["html"]],
   use: {
-    baseURL: "http://sdetchallenge.fetch.com",
+    baseURL: "https://sdetchallenge.fetch.com",
     trace: "on-first-retry",
     video: "on",
     screenshot: "on",
