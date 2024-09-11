@@ -1,5 +1,15 @@
+# node libraries
 node_modules/
-/test-results/
+
+# playwright reports
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/test-results/
+
+# project IDE setup configs
+.vscode
+.idea
+
+# general
+.env

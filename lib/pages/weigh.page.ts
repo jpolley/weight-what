@@ -1,77 +1,58 @@
-import { Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
+import { WeightBars, splitArray, parseResultFromString } from "@helpers";
+import { parse } from "path";
 
 export class WeighPage {
-  readonly leftBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#left_${i}`));
-  readonly rightBars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#right_${i}`));
-  readonly bars = Array.from({ length: 9 }, (_, i) => this.page.locator(`#coin_${i}`));
-  readonly results = Array.from({ length: 3 }, (_, i) => this.page.locator(`ol > li:nth-child(${i + 1})`));
+  readonly weighButton = this.page.getByRole("button", { name: "Weigh" });
+  readonly resetButton = this.page.getByRole("button", { name: "Reset" });
 
-  readonly weighBtn = this.page.getByRole("button", { name: "Weigh" });
-  readonly resetBtn = this.page.getByRole("button", { name: "Reset" });
-
-  getLeftBar(index: number) {
-    if (index < 0 || index >= this.leftBars.length) {
-      throw new Error(`Invalid left bar index: ${index}`);
-    }
-    return this.leftBars[index];
+  barAtIndex(index: number): Locator {
+    return this.page.locator(`#coin_${index}`);
   }
 
-  getRightBar(index: number) {
-    if (index < 0 || index >= this.rightBars.length) {
-      throw new Error(`Invalid right bar index: ${index}`);
-    }
-    return this.rightBars[index];
+  barInBowlAtIndex(bowlSide: "left" | "right", index: number): Locator {
+    return this.page.locator(`#${bowlSide}_${index}`);
   }
 
-  getBar(index: number) {
-    if (index < 0 || index >= this.bars.length) {
-      throw new Error(`Invalid bar index: ${index}`);
-    }
-    return this.bars[index];
+  results(): Locator {
+    return this.page.locator("ol > li");
   }
 
-  getResult(index: number) {
-    if (index < 0 || index >= this.results.length) {
-      throw new Error(`Invalid result index: ${index}`);
-    }
-    return this.results[index].innerText();
+  resultsRow(row: number): Locator {
+    return this.results().nth(row);
   }
 
-  async goto() {
-    await this.page.goto("/");
+  constructor(private readonly page: Page) {}
+
+  visit() {
+    this.page.goto("/");
   }
 
-  async weighBars(bars: number[][]) {
-    const leftBars = bars[0];
-    const rightBars = bars[1];
-
-    await this.clickReset();
-    await this.fillLeft(leftBars);
-    await this.fillRight(rightBars);
-    await this.clickWeigh();
-  }
-
-  async fillLeft(bars: number[]) {
+  async fillBowlWithBars(bars: number[], bowlSide: "left" | "right") {
     for (let i = 0; i < bars.length; i++) {
-      await this.leftBars[i].fill(`${bars[i]}`);
+      await this.barInBowlAtIndex(bowlSide, i).fill(`${bars[i]}`);
     }
   }
 
-  async fillRight(bars: number[]) {
-    for (let i = 0; i < bars.length; i++) {
-      await this.rightBars[i].fill(`${bars[i]}`);
+  async weighBowls(leftBowlBars: number[], rightBowlBars: number[]) {
+    await this.resetButton.click();
+    await this.fillBowlWithBars(leftBowlBars, "left");
+    await this.fillBowlWithBars(rightBowlBars, "right");
+    await this.weighButton.click();
+  }
+
+  async findFakeBar(): Promise<number> {
+    let weightBars = WeightBars;
+
+    while (weightBars.length > 1) {
+      await this.resetButton.click();
+      weightBars = await this.findArrayContainingFakeBar(weightBars);
     }
+
+    return weightBars[0];
   }
 
-  async clickWeigh() {
-    await this.weighBtn.click();
-  }
-
-  async clickReset() {
-    await this.resetBtn.click();
-  }
-
-  async clickFakeBar(number: number): Promise<string> {
+  async clickFakeBar(index: number): Promise<string> {
     const dialogMessagePromise = new Promise<string>((resolve) => {
       this.page.once("dialog", async (dialog) => {
         const message = dialog.message();
@@ -80,32 +61,27 @@ export class WeighPage {
       });
     });
 
-    await this.getBar(number).click();
-
+    await this.barAtIndex(index).click();
     return await dialogMessagePromise;
   }
 
-  async numberOfWeighs() {
-    if (await this.hasMultipleWeighs()) {
-      return "After weighing three times,";
+  private async findArrayContainingFakeBar(array: number[]) {
+    const [left, right, leftOver] = splitArray(array);
+    const resultString = await this.executeWeightCheck(left, right);
+    const { leftArray, operator, rightArray } = parseResultFromString(resultString);
+
+    if (operator === "=") {
+      return leftOver;
+    } else if (operator === "<") {
+      return leftArray;
     } else {
-      return "After weighing one time,";
+      return rightArray;
     }
   }
 
-  async hasMultipleWeighs() {
-    return await this.results[1].isVisible();
+  private async executeWeightCheck(left: number[], right: number[]) {
+    const resultRowCount = await this.results().count();
+    await this.weighBowls(left, right);
+    return await this.resultsRow(resultRowCount).innerText();
   }
-
-  async printSummary(alertMessage: string, fakebar: number) {
-    console.log(alertMessage);
-    console.log(`${await this.numberOfWeighs()} the fake bar is: ${fakebar}`);
-    console.log(`1. ${await this.getResult(0)}`);
-    if (await this.hasMultipleWeighs()) {
-      console.log(`2. ${await this.getResult(1)}`);
-      console.log(`3. ${await this.getResult(2)}`);
-    }
-  }
-
-  constructor(private readonly page: Page) {}
 }
